@@ -99,6 +99,24 @@
       position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
       background: rgba(29, 26, 25, 0.8); color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 0.9rem;
     }
+    .fotos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+    .foto-item { position: relative; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden; background: var(--rosa-claro); }
+    .foto-item img { width: 100%; height: 100%; object-fit: cover; }
+    .foto-item .quitar {
+      position: absolute; top: 4px; right: 4px; width: 30px; height: 30px; border-radius: 50%;
+      border: 0; background: rgba(29, 26, 25, 0.75); color: #fff; cursor: pointer; font-size: 0.9rem;
+    }
+    .foto-item .principal, .foto-item .hacer-principal {
+      position: absolute; left: 4px; bottom: 4px; font-size: 0.68rem; font-weight: 800;
+      padding: 4px 8px; border-radius: 999px; border: 0;
+    }
+    .foto-item .principal { background: var(--rosa); color: #fff; }
+    .foto-item .hacer-principal { background: rgba(255, 255, 255, 0.92); color: var(--texto); cursor: pointer; }
+    .agregar-foto {
+      display: grid; place-items: center; text-align: center; aspect-ratio: 1 / 1;
+      border: 2px dashed var(--rosa); border-radius: 12px; background: var(--rosa-claro);
+      color: var(--rosa-oscuro); font-weight: 700; font-size: 0.85rem; cursor: pointer;
+    }
     .precio-campo { position: relative; }
     .precio-campo::before { content: "L"; position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--suave); }
     .precio-campo input { padding-left: 36px; }
@@ -330,25 +348,30 @@
       return await new Promise((ok) => c.toBlob(ok, "image/jpeg", 0.82));
     }
 
+    // ---------- Fotos de un producto ----------
+    const MAX_FOTOS = 5;
+    function fotosDe(p) {
+      if (Array.isArray(p.fotos) && p.fotos.length) return p.fotos;
+      return p.foto_url ? [{ url: p.foto_url, path: p.foto_path }] : [];
+    }
+
     // ---------- Formulario agregar / editar ----------
     $("btnNuevo").onclick = () => abrirForm(null);
 
     function abrirForm(id) {
       const p = id ? productos.find((x) => String(x.id) === String(id)) : null;
       const cats = [...new Set(productos.map((x) => (x.categoria || "").trim()).filter(Boolean))];
-      let archivoNuevo = null;
+      const originales = p ? fotosDe(p) : [];
+      // Cada foto: { url, path } si ya está subida, o { url, file } si es nueva
+      let fotos = originales.map((f) => ({ ...f }));
 
       abrirModal(`
         <button class="cerrar" aria-label="Cerrar">✕</button>
         <form class="form" id="formProducto">
           <h2>${p ? "Editar producto" : "Nuevo producto"}</h2>
 
-          <label class="elegir-foto" id="zonaFoto">
-            <input type="file" id="foto" accept="image/*" hidden>
-            ${p && p.foto_url
-              ? `<img src="${esc(p.foto_url)}" alt=""><span class="cambiar">📷 Cambiar foto</span>`
-              : `<div><span class="grande">📷</span>Toca aquí para poner la foto</div>`}
-          </label>
+          <input type="file" id="foto" accept="image/*" multiple hidden>
+          <div id="zonaFoto"></div>
 
           <div class="campo">
             <label for="nombre">Nombre</label>
@@ -390,13 +413,44 @@
       m.querySelector(".cerrar").onclick = cerrarModal;
       $("btnCancelar").onclick = cerrarModal;
 
+      function pintarFotos() {
+        const z = $("zonaFoto");
+        if (!fotos.length) {
+          z.innerHTML = `<label class="elegir-foto" for="foto"><div><span class="grande">📷</span>Toca aquí para poner las fotos<br><small style="font-weight:600">Puedes elegir hasta ${MAX_FOTOS}</small></div></label>`;
+          return;
+        }
+        z.innerHTML = `
+          <div class="campo" style="margin-bottom:6px">
+            <label>Fotos <span class="ayuda">(${fotos.length} de ${MAX_FOTOS} · la primera es la que se ve en el catálogo)</span></label>
+          </div>
+          <div class="fotos-grid">
+            ${fotos.map((f, i) => `
+              <div class="foto-item">
+                <img src="${esc(f.url)}" alt="">
+                <button type="button" class="quitar" data-quitar="${i}" aria-label="Quitar foto">✕</button>
+                ${i === 0
+                  ? `<span class="principal">⭐ Principal</span>`
+                  : `<button type="button" class="hacer-principal" data-principal="${i}">Hacer principal</button>`}
+              </div>`).join("")}
+            ${fotos.length < MAX_FOTOS ? `<label class="agregar-foto" for="foto"><div><span style="font-size:1.6rem;display:block">➕</span>Agregar foto</div></label>` : ""}
+          </div>`;
+        z.querySelectorAll("[data-quitar]").forEach((b) => b.onclick = () => { fotos.splice(Number(b.dataset.quitar), 1); pintarFotos(); });
+        z.querySelectorAll("[data-principal]").forEach((b) => b.onclick = () => {
+          const [f] = fotos.splice(Number(b.dataset.principal), 1);
+          fotos.unshift(f);
+          pintarFotos();
+        });
+      }
+      pintarFotos();
+
       $("foto").onchange = () => {
-        const f = $("foto").files[0];
-        if (!f) return;
-        archivoNuevo = f;
-        const url = URL.createObjectURL(f);
-        $("zonaFoto").querySelectorAll("img, div, .cambiar").forEach((n) => n.remove());
-        $("zonaFoto").insertAdjacentHTML("beforeend", `<img src="${url}" alt=""><span class="cambiar">📷 Cambiar foto</span>`);
+        const nuevas = [...$("foto").files];
+        $("foto").value = "";
+        if (!nuevas.length) return;
+        const espacio = MAX_FOTOS - fotos.length;
+        if (nuevas.length > espacio) aviso(`Solo caben ${MAX_FOTOS} fotos por producto 🙂`);
+        nuevas.slice(0, espacio).forEach((file) => fotos.push({ url: URL.createObjectURL(file), file }));
+        pintarFotos();
       };
 
       $("formProducto").onsubmit = async (e) => {
@@ -404,7 +458,7 @@
         const btn = $("btnGuardar");
         $("errorForm").hidden = true;
 
-        if (!p && !archivoNuevo) {
+        if (!fotos.length) {
           $("errorForm").textContent = "📷 Falta la foto. Toca el cuadro rosado para ponerla.";
           $("errorForm").hidden = false;
           $("zonaFoto").scrollIntoView({ behavior: "smooth", block: "center" });
@@ -420,31 +474,43 @@
         };
 
         btn.disabled = true;
-        btn.textContent = archivoNuevo ? "Subiendo foto…" : "Guardando…";
+        btn.textContent = "Guardando…";
+        const subidas = []; // fotos nuevas que se suben en este intento
 
         try {
+          const finales = [];
+          const totalNuevas = fotos.filter((f) => f.file).length;
+          let n = 0;
+          for (const f of fotos) {
+            if (!f.file) { finales.push({ url: f.url, path: f.path }); continue; }
+            n++;
+            btn.textContent = totalNuevas > 1 ? `Subiendo foto ${n} de ${totalNuevas}…` : "Subiendo foto…";
+            if (DEMO) { finales.push({ url: f.url, path: null }); continue; }
+            const blob = await achicarFoto(f.file);
+            const ruta = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+            const { error: errSubir } = await db.storage.from(BUCKET).upload(ruta, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
+            if (errSubir) throw errSubir;
+            subidas.push(ruta);
+            finales.push({ url: db.storage.from(BUCKET).getPublicUrl(ruta).data.publicUrl, path: ruta });
+          }
+          datos.fotos = finales;
+          datos.foto_url = finales[0].url;
+          datos.foto_path = finales[0].path;
+          btn.textContent = "Guardando…";
+
           if (DEMO) {
-            if (archivoNuevo) datos.foto_url = URL.createObjectURL(archivoNuevo);
             if (p) Object.assign(p, datos);
             else productos.unshift({ id: Date.now(), ...datos });
           } else {
-            let fotoVieja = null;
-            if (archivoNuevo) {
-              const blob = await achicarFoto(archivoNuevo);
-              const ruta = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-              const { error: errSubir } = await db.storage.from(BUCKET).upload(ruta, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
-              if (errSubir) throw errSubir;
-              datos.foto_path = ruta;
-              datos.foto_url = db.storage.from(BUCKET).getPublicUrl(ruta).data.publicUrl;
-              if (p?.foto_path) fotoVieja = p.foto_path;
-            }
-            btn.textContent = "Guardando…";
             const consulta = p
               ? db.from("productos").update(datos).eq("id", p.id)
               : db.from("productos").insert(datos);
             const { error } = await consulta;
             if (error) throw error;
-            if (fotoVieja) db.storage.from(BUCKET).remove([fotoVieja]);
+            // Borrar del almacenamiento las fotos que se quitaron
+            const quedan = new Set(finales.map((f) => f.path));
+            const quitadas = originales.map((f) => f.path).filter((r) => r && !quedan.has(r));
+            if (quitadas.length) db.storage.from(BUCKET).remove(quitadas);
             await cargar();
           }
           cerrarModal();
@@ -452,6 +518,7 @@
           aviso(p ? "✅ ¡Cambios guardados!" : "🎉 ¡Producto agregado!");
         } catch (err) {
           console.error(err);
+          if (subidas.length && db) db.storage.from(BUCKET).remove(subidas);
           $("errorForm").textContent = traducirError(err);
           $("errorForm").hidden = false;
           btn.disabled = false;
@@ -483,7 +550,8 @@
           } else {
             const { error } = await db.from("productos").delete().eq("id", p.id);
             if (error) throw error;
-            if (p.foto_path) db.storage.from(BUCKET).remove([p.foto_path]);
+            const rutas = fotosDe(p).map((f) => f.path).filter(Boolean);
+            if (rutas.length) db.storage.from(BUCKET).remove(rutas);
             await cargar();
           }
           cerrarModal();

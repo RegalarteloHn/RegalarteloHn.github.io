@@ -67,6 +67,30 @@
 
     .detalle-foto { aspect-ratio: 1/1; background: var(--rosa-claro); }
     .detalle-foto img { width: 100%; height: 100%; object-fit: cover; }
+
+    .carrusel { position: relative; background: var(--rosa-claro); }
+    .pista {
+      display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .pista::-webkit-scrollbar { display: none; }
+    .pista img { flex: 0 0 100%; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; scroll-snap-align: center; }
+    .flecha {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 38px; height: 38px; border-radius: 50%; border: 0;
+      background: rgba(255, 255, 255, 0.9); box-shadow: var(--sombra);
+      font-size: 1.6rem; line-height: 1; cursor: pointer; color: var(--texto);
+    }
+    .flecha.izq { left: 10px; }
+    .flecha.der { right: 10px; }
+    .puntos { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; }
+    .puntos span { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, 0.6); box-shadow: 0 0 3px rgba(0,0,0,0.3); transition: 0.2s; }
+    .puntos span.activo { background: #fff; width: 18px; border-radius: 999px; }
+    .cuantas {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(255, 255, 255, 0.92); color: var(--texto);
+      font-size: 0.75rem; font-weight: 800; padding: 4px 9px; border-radius: 999px;
+    }
     .detalle { padding: 20px 22px 26px; }
     .detalle h2 { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem; margin: 0; line-height: 1.15; }
     .detalle .precio { font-size: 1.4rem; font-weight: 800; color: var(--rosa-oscuro); margin: 6px 0 12px; }
@@ -151,9 +175,41 @@
       { id: 6, nombre: "Gloss labial", descripcion: "Brillo hidratante, varios tonos.", precio: 280, categoria: "Makeup", disponible: true, emoji: "💄" },
     ];
 
+    function fotosDe(p) {
+      if (Array.isArray(p.fotos) && p.fotos.length) return p.fotos;
+      return p.foto_url ? [{ url: p.foto_url }] : [];
+    }
+
     function fotoHTML(p) {
-      if (p.foto_url) return `<img src="${esc(p.foto_url)}" alt="${esc(p.nombre)}" loading="lazy">`;
+      const f = fotosDe(p);
+      if (f.length) return `<img src="${esc(f[0].url)}" alt="${esc(p.nombre)}" loading="lazy">`;
       return `<div class="sin-foto">${p.emoji || "🎁"}</div>`;
+    }
+
+    function carruselHTML(p) {
+      const f = fotosDe(p);
+      if (f.length < 2) return `<div class="detalle-foto">${fotoHTML(p)}</div>`;
+      return `
+        <div class="carrusel">
+          <div class="pista">${f.map((x, i) => `<img src="${esc(x.url)}" alt="${esc(p.nombre)} · foto ${i + 1}" ${i ? 'loading="lazy"' : ""}>`).join("")}</div>
+          <button class="flecha izq" aria-label="Foto anterior">‹</button>
+          <button class="flecha der" aria-label="Foto siguiente">›</button>
+          <div class="puntos">${f.map((_, i) => `<span class="${i ? "" : "activo"}"></span>`).join("")}</div>
+        </div>`;
+    }
+
+    function activarCarrusel(raiz) {
+      const c = raiz.querySelector(".carrusel");
+      if (!c) return;
+      const pista = c.querySelector(".pista");
+      const puntos = [...c.querySelectorAll(".puntos span")];
+      const ir = (d) => pista.scrollBy({ left: d * pista.clientWidth, behavior: "smooth" });
+      c.querySelector(".izq").onclick = () => ir(-1);
+      c.querySelector(".der").onclick = () => ir(1);
+      pista.addEventListener("scroll", () => {
+        const i = Math.round(pista.scrollLeft / pista.clientWidth);
+        puntos.forEach((s, j) => s.classList.toggle("activo", i === j));
+      }, { passive: true });
     }
 
     function pintarChips() {
@@ -180,7 +236,7 @@
       }
       $("lista").innerHTML = `<div class="grid">${visibles.map((p) => `
         <button class="producto ${p.disponible ? "" : "agotado"}" data-id="${p.id}">
-          <div class="foto">${fotoHTML(p)}${p.disponible ? "" : '<span class="etiqueta">AGOTADO</span>'}</div>
+          <div class="foto">${fotoHTML(p)}${p.disponible ? "" : '<span class="etiqueta">AGOTADO</span>'}${fotosDe(p).length > 1 ? `<span class="cuantas">📷 ${fotosDe(p).length}</span>` : ""}</div>
           <div class="info">
             <h3 class="nombre">${esc(p.nombre)}</h3>
             <div class="precio">${precio(p.precio)}</div>
@@ -195,7 +251,7 @@
       const msg = `¡Hola! 👋 Me interesa este producto:\n\n🎁 ${p.nombre}${Number(p.precio) > 0 ? "\n💰 " + precio(p.precio) : ""}\n\n¿Está disponible?${Number(p.precio) > 0 ? "" : " ¿Qué precio tiene?"}`;
       $("modalContenido").innerHTML = `
         <button class="cerrar" aria-label="Cerrar">✕</button>
-        <div class="detalle-foto">${fotoHTML(p)}</div>
+        ${carruselHTML(p)}
         <div class="detalle">
           ${p.categoria ? `<div class="categoria">${esc(p.categoria)}</div>` : ""}
           <h2>${esc(p.nombre)}</h2>
@@ -209,6 +265,7 @@
       $("modal").classList.add("abierto");
       document.body.style.overflow = "hidden";
       $("modalContenido").querySelector(".cerrar").onclick = cerrar;
+      activarCarrusel($("modalContenido"));
     }
     function cerrar() { $("modal").classList.remove("abierto"); document.body.style.overflow = ""; }
     $("modal").onclick = (e) => { if (e.target.id === "modal") cerrar(); };
