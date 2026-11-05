@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Regalártelo · Catálogo</title>
+  <meta name="description" content="Regalitos y artículos para el hogar, jardín y detalles para niños y adultos. San Pedro Sula.">
+  <meta property="og:title" content="Regalártelo · Catálogo">
+  <meta property="og:description" content="Regálate algo bonito 🎁 Mira todo lo que tenemos disponible.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎁</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Great+Vibes&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+  <style>
+    header.portada {
+      text-align: center;
+      padding: 40px 16px 24px;
+    }
+    .sello {
+      width: 132px; height: 132px;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: var(--sombra);
+      display: grid; place-items: center;
+      text-align: center;
+    }
+    .sello .logo { font-size: 1.55rem; }
+    .sello .lema { font-size: 0.85rem; margin-top: 2px; }
+    .sello .lema::before, .sello .lema::after { width: 12px; }
+    .descripcion { color: var(--suave); max-width: 520px; margin: 14px auto 0; }
+    .redes { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+
+    .barra {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(251, 247, 244, 0.94);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 12px 0;
+      border-bottom: 1px solid var(--linea);
+      margin-bottom: 20px;
+    }
+    .buscador {
+      width: 100%;
+      padding: 12px 18px 12px 44px;
+      border-radius: 999px;
+      border: 1.5px solid var(--linea);
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%236f6764' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='m13 13 4 4'/%3E%3C/svg%3E") no-repeat 16px center;
+      outline: none;
+    }
+    .buscador:focus { border-color: var(--rosa); }
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding-top: 10px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: none;
+      border: 1.5px solid var(--linea);
+      background: #fff;
+      border-radius: 999px;
+      padding: 7px 16px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .chip.activo { background: var(--texto); border-color: var(--texto); color: #fff; }
+
+    .detalle-foto { aspect-ratio: 1/1; background: var(--rosa-claro); }
+    .detalle-foto img { width: 100%; height: 100%; object-fit: cover; }
+    .detalle { padding: 20px 22px 26px; }
+    .detalle h2 { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.9rem; margin: 0; line-height: 1.15; }
+    .detalle .precio { font-size: 1.4rem; font-weight: 800; color: var(--rosa-oscuro); margin: 6px 0 12px; }
+    .detalle p { color: var(--suave); white-space: pre-line; margin: 0 0 20px; }
+    .detalle .categoria { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--suave); font-weight: 700; }
+
+    footer { text-align: center; color: var(--suave); padding: 50px 16px 40px; font-size: 0.92rem; }
+    .demo {
+      background: #fff6d6; color: #7a5b00;
+      text-align: center; padding: 10px 16px; font-size: 0.9rem; font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div id="demo" class="demo" hidden>👀 Vista de ejemplo: así se verá el catálogo cuando agregues tus productos.</div>
+
+  <header class="portada">
+    <div class="sello">
+      <div>
+        <h1 class="logo" id="nombreTienda">Regalártelo</h1>
+        <div class="lema" id="lemaTienda">Regálate algo bonito</div>
+      </div>
+    </div>
+    <p class="descripcion">Regalitos y artículos para el hogar, jardín y detalles para niños y adultos. 🎁<br><span id="ubicacion"></span></p>
+    <div class="redes">
+      <a class="btn btn-whatsapp" id="btnWhats" target="_blank" rel="noopener">💬 WhatsApp</a>
+      <a class="btn btn-borde" id="btnInsta" target="_blank" rel="noopener">📸 Instagram</a>
+    </div>
+  </header>
+
+  <div class="barra">
+    <div class="contenedor">
+      <input class="buscador" id="buscar" type="search" placeholder="¿Qué estás buscando?" aria-label="Buscar productos">
+      <div class="chips" id="chips"></div>
+    </div>
+  </div>
+
+  <main class="contenedor">
+    <div id="lista"><div class="cargando"></div></div>
+  </main>
+
+  <footer>
+    Hecho con 💕 para <strong id="pie">Regalártelo</strong><br>
+    Pagos por transferencia o tarjeta · Envíos a nivel nacional
+  </footer>
+
+  <div class="modal-fondo" id="modal" role="dialog" aria-modal="true">
+    <div class="modal" id="modalContenido"></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script>
+    const T = window.TIENDA;
+    const $ = (id) => document.getElementById(id);
+    let productos = [];
+    let filtro = "Todo";
+
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const precio = (n) => `${T.MONEDA} ${Number(n || 0).toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    function enlaceContacto(texto) {
+      if (T.WHATSAPP) return `https://wa.me/${T.WHATSAPP.replace(/\D/g, "")}?text=${encodeURIComponent(texto)}`;
+      return `https://ig.me/m/${T.INSTAGRAM}`;
+    }
+
+    // Datos de la tienda
+    $("nombreTienda").textContent = T.NOMBRE;
+    $("lemaTienda").textContent = T.LEMA;
+    $("pie").textContent = T.NOMBRE;
+    $("ubicacion").textContent = "📍 " + T.UBICACION;
+    $("btnInsta").href = `https://www.instagram.com/${T.INSTAGRAM}/`;
+    $("btnWhats").href = enlaceContacto(`¡Hola ${T.NOMBRE}! 👋 Vi su catálogo y quisiera más información.`);
+    if (!T.WHATSAPP) $("btnWhats").innerHTML = "💬 Mándanos mensaje";
+
+    const EJEMPLOS = [
+      { id: 1, nombre: "Body mist floral", descripcion: "Aroma floral con toque de fruta. Pregunta por más aromas disponibles.", precio: 450, categoria: "Aromas", disponible: true, emoji: "🌸" },
+      { id: 2, nombre: "Mini termo", descripcion: "Mantiene tus bebidas frías o calientes por horas. Varios colores.", precio: 650, categoria: "Hogar", disponible: true, emoji: "🥤" },
+      { id: 3, nombre: "Lonchera infantil", descripcion: "Hermosas loncheras para el regreso a clases.", precio: 520, categoria: "Niños", disponible: true, emoji: "🎒" },
+      { id: 4, nombre: "Cámara instantánea", descripcion: "Disponible en color menta y rosa.", precio: 2800, categoria: "Regalos", disponible: true, emoji: "📷" },
+      { id: 5, nombre: "Detalle para mamá", descripcion: "El regalo perfecto para mamá 💝", precio: 900, categoria: "Regalos", disponible: false, emoji: "💝" },
+      { id: 6, nombre: "Gloss labial", descripcion: "Brillo hidratante, varios tonos.", precio: 280, categoria: "Makeup", disponible: true, emoji: "💄" },
+    ];
+
+    function fotoHTML(p) {
+      if (p.foto_url) return `<img src="${esc(p.foto_url)}" alt="${esc(p.nombre)}" loading="lazy">`;
+      return `<div class="sin-foto">${p.emoji || "🎁"}</div>`;
+    }
+
+    function pintarChips() {
+      const cats = ["Todo", ...new Set(productos.map((p) => (p.categoria || "").trim()).filter(Boolean))];
+      $("chips").innerHTML = cats.length > 1
+        ? cats.map((c) => `<button class="chip ${c === filtro ? "activo" : ""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("")
+        : "";
+      $("chips").querySelectorAll(".chip").forEach((b) => b.onclick = () => { filtro = b.dataset.cat; pintarChips(); pintar(); });
+    }
+
+    function pintar() {
+      const q = $("buscar").value.trim().toLowerCase();
+      const visibles = productos.filter((p) =>
+        (filtro === "Todo" || (p.categoria || "").trim() === filtro) &&
+        (!q || (p.nombre + " " + (p.descripcion || "") + " " + (p.categoria || "")).toLowerCase().includes(q))
+      );
+      if (!productos.length) {
+        $("lista").innerHTML = `<div class="vacio"><div class="emoji">🎁</div><p>Muy pronto verás aquí nuestros productos.<br>¡Vuelve en un ratito!</p></div>`;
+        return;
+      }
+      if (!visibles.length) {
+        $("lista").innerHTML = `<div class="vacio"><div class="emoji">🔍</div><p>No encontramos nada con esa búsqueda.<br>Escríbenos y te ayudamos.</p></div>`;
+        return;
+      }
+      $("lista").innerHTML = `<div class="grid">${visibles.map((p) => `
+        <button class="producto ${p.disponible ? "" : "agotado"}" data-id="${p.id}">
+          <div class="foto">${fotoHTML(p)}${p.disponible ? "" : '<span class="etiqueta">AGOTADO</span>'}</div>
+          <div class="info">
+            <h3 class="nombre">${esc(p.nombre)}</h3>
+            <div class="precio">${precio(p.precio)}</div>
+          </div>
+        </button>`).join("")}</div>`;
+      $("lista").querySelectorAll(".producto").forEach((el) => el.onclick = () => abrir(el.dataset.id));
+    }
+
+    function abrir(id) {
+      const p = productos.find((x) => String(x.id) === String(id));
+      if (!p) return;
+      const msg = `¡Hola! 👋 Me interesa este producto:\n\n🎁 ${p.nombre}\n💰 ${precio(p.precio)}\n\n¿Está disponible?`;
+      $("modalContenido").innerHTML = `
+        <button class="cerrar" aria-label="Cerrar">✕</button>
+        <div class="detalle-foto">${fotoHTML(p)}</div>
+        <div class="detalle">
+          ${p.categoria ? `<div class="categoria">${esc(p.categoria)}</div>` : ""}
+          <h2>${esc(p.nombre)}</h2>
+          <div class="precio">${precio(p.precio)}</div>
+          ${p.descripcion ? `<p>${esc(p.descripcion)}</p>` : ""}
+          ${p.disponible
+            ? `<a class="btn btn-whatsapp btn-grande" href="${enlaceContacto(msg)}" target="_blank" rel="noopener">💬 ¡Lo quiero! por WhatsApp</a>`
+            : `<a class="btn btn-borde btn-grande" href="${enlaceContacto(`¡Hola! ¿Volverá a estar disponible "${p.nombre}"?`)}" target="_blank" rel="noopener">Agotado · Avísame cuando vuelva</a>`}
+          ${T.WHATSAPP ? `<a class="btn btn-borde btn-grande" style="margin-top:10px" href="https://ig.me/m/${T.INSTAGRAM}" target="_blank" rel="noopener">📸 Preguntar por Instagram</a>` : ""}
+        </div>`;
+      $("modal").classList.add("abierto");
+      document.body.style.overflow = "hidden";
+      $("modalContenido").querySelector(".cerrar").onclick = cerrar;
+    }
+    function cerrar() { $("modal").classList.remove("abierto"); document.body.style.overflow = ""; }
+    $("modal").onclick = (e) => { if (e.target.id === "modal") cerrar(); };
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") cerrar(); });
+    $("buscar").oninput = pintar;
+
+    async function cargar() {
+      if (!T.SUPABASE_URL || !T.SUPABASE_KEY) {
+        productos = EJEMPLOS;
+        $("demo").hidden = false;
+      } else {
+        try {
+          const db = supabase.createClient(T.SUPABASE_URL, T.SUPABASE_KEY);
+          const { data, error } = await db.from("productos").select("*")
+            .order("disponible", { ascending: false })
+            .order("creado", { ascending: false });
+          if (error) throw error;
+          productos = data;
+        } catch (e) {
+          console.error(e);
+          $("lista").innerHTML = `<div class="vacio"><div class="emoji">😕</div><p>No pudimos cargar el catálogo.<br>Intenta de nuevo en un momento.</p></div>`;
+          return;
+        }
+      }
+      pintarChips();
+      pintar();
+    }
+    cargar();
+  </script>
+</body>
+</html>
