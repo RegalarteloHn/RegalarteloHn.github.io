@@ -20,5 +20,5 @@ window.TIENDA = {
   LEMA: "Regálate algo bonito",
   INSTAGRAM: "regalartelohn",
   UBICACION: "San Pedro Sula · Envíos dentro y fuera de la ciudad",
-  MONEDA: "L",
+  MONEDA: "Lps.",
 };

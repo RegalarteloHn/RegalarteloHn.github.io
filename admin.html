@@ -118,8 +118,8 @@
       color: var(--rosa-oscuro); font-weight: 700; font-size: 0.85rem; cursor: pointer;
     }
     .precio-campo { position: relative; }
-    .precio-campo::before { content: "L"; position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--suave); }
-    .precio-campo input { padding-left: 36px; }
+    .precio-campo::before { content: "Lps."; position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--suave); }
+    .precio-campo input { padding-left: 56px; }
 
     .interruptor {
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -217,7 +217,7 @@
     let productos = [];
 
     const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-    const precio = (n) => Number(n) > 0 ? `${T.MONEDA} ${Number(n).toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "Pregunta el precio";
+    const precio = (n) => `${T.MONEDA} ${Number(n || 0).toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     function aviso(texto) {
       const a = $("aviso");
@@ -381,7 +381,7 @@
           <div class="campo">
             <label for="precio">Precio</label>
             <div class="precio-campo">
-              <input id="precio" type="number" inputmode="decimal" min="0" step="0.01" required placeholder="0 = Pregunta el precio" value="${p ? esc(p.precio) : ""}">
+              <input id="precio" type="number" inputmode="decimal" min="0" step="0.01" required placeholder="0.00" value="${p ? esc(p.precio) : ""}">
             </div>
           </div>
 

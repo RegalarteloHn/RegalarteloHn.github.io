@@ -150,7 +150,7 @@
     let filtro = "Todo";
 
     const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-    const precio = (n) => Number(n) > 0 ? `${T.MONEDA} ${Number(n).toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "Pregunta el precio";
+    const precio = (n) => `${T.MONEDA} ${Number(n || 0).toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     function enlaceContacto(texto) {
       if (T.WHATSAPP) return `https://wa.me/${T.WHATSAPP.replace(/\D/g, "")}?text=${encodeURIComponent(texto)}`;
@@ -248,7 +248,7 @@
     function abrir(id) {
       const p = productos.find((x) => String(x.id) === String(id));
       if (!p) return;
-      const msg = `¡Hola! 👋 Me interesa este producto:\n\n🎁 ${p.nombre}${Number(p.precio) > 0 ? "\n💰 " + precio(p.precio) : ""}\n\n¿Está disponible?${Number(p.precio) > 0 ? "" : " ¿Qué precio tiene?"}`;
+      const msg = `¡Hola! 👋 Me interesa este producto:\n\n🎁 ${p.nombre}\n💰 ${precio(p.precio)}\n\n¿Está disponible?`;
       $("modalContenido").innerHTML = `
         <button class="cerrar" aria-label="Cerrar">✕</button>
         ${carruselHTML(p)}
